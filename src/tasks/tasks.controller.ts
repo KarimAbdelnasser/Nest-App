@@ -17,15 +17,11 @@ import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dtos/create-task-dto';
 import { UpdateTaskDto } from './dtos/update-task-dto';
-import { UsersService } from 'src/users/users.service';
 
 @Controller('task')
 @Serialize(TaskDto)
 export class TasksController {
-  constructor(
-    private tasksServices: TasksService,
-    private usersService: UsersService,
-  ) {}
+  constructor(private tasksServices: TasksService) {}
 
   @Post('/new')
   async createTask(@Req() req, @Body() body: CreateTaskDto, @Res() res) {
@@ -64,6 +60,19 @@ export class TasksController {
     const userId = req.user._id;
 
     const task = await this.tasksServices.getOne(userId, id);
+
+    res.json({ data: task });
+  }
+
+  @Post('/done/:id')
+  async completed(@Param('id') id: string, @Req() req, @Res() res) {
+    if (!req.user) {
+      throw new UnauthorizedException('Unauthorized');
+    }
+
+    const userId = req.user._id;
+
+    const task = await this.tasksServices.completedOne(userId, id);
 
     res.json({ data: task });
   }

@@ -57,6 +57,35 @@ export class TasksService {
     return task;
   }
 
+  async completedOne(userId: string, taskId: string): Promise<Task> {
+    try {
+      const task = await this.taskModel
+        .findOne({ _id: taskId, userId })
+        .select('title description status')
+        .exec();
+
+      if (!task) {
+        throw new NotFoundException('Task not found');
+      }
+
+      if (task.status === 'Completed') {
+        throw new Error('This task is already completed');
+      }
+
+      task.status = 'Completed';
+
+      await task.save();
+
+      return task;
+    } catch (error) {
+      logger.error(`Error completing task: ${(error as Error).message}`);
+
+      throw new InternalServerErrorException(
+        `Could not completing task : ${error.message}`,
+      );
+    }
+  }
+
   async update(
     id: string,
     userId: string,
