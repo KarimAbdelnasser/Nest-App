@@ -18,7 +18,7 @@ export class MorganMiddleware implements NestMiddleware {
 
       const logMessage = `[${logLevel}] ${res.statusCode} ${req.method} ${
         req.originalUrl
-      } (${durationInMs.toFixed(3)} ms)`;
+      } - IP: ${req.ip} (${durationInMs.toFixed(3)} ms)`;
 
       console.log(`${timestamp} - ${color}${logMessage}\x1b[0m`);
     });
