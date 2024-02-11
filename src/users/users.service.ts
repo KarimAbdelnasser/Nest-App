@@ -11,6 +11,7 @@ import { User } from './user.schema';
 import { Model } from 'mongoose';
 import { UserDto } from './dtos/user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { logger } from 'src/utility/logger';
 
 @Injectable()
 export class UsersService {
@@ -51,6 +52,8 @@ export class UsersService {
 
       return { user: userDto, token };
     } catch (error) {
+      logger.error(`Error creating a new user: ${(error as Error).message}`);
+
       throw new InternalServerErrorException(
         `Could not create user : ${error.message}`,
       );
@@ -64,6 +67,8 @@ export class UsersService {
       }
       return this.userModel.findById(id);
     } catch (error) {
+      logger.error(`Error find a user: ${(error as Error).message}`);
+
       throw new InternalServerErrorException(
         `Could not find : ${error.message}`,
       );
@@ -95,6 +100,8 @@ export class UsersService {
 
       return { user: userDto, token };
     } catch (error) {
+      logger.error(`Error sign in: ${(error as Error).message}`);
+
       throw new InternalServerErrorException(
         `Could not sign in : ${error.message}`,
       );
@@ -138,6 +145,8 @@ export class UsersService {
 
       return updatedUser;
     } catch (error) {
+      logger.error(`Error update a user: ${(error as Error).message}`);
+
       throw new InternalServerErrorException(
         `Could not update : ${error.message}`,
       );
@@ -150,10 +159,17 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found!');
     }
+    try {
+      await user.deleteOne({ id });
 
-    await user.deleteOne({ id });
+      return user;
+    } catch (error) {
+      logger.error(`Error delete a user: ${(error as Error).message}`);
 
-    return user;
+      throw new InternalServerErrorException(
+        `Could not remove : ${error.message}`,
+      );
+    }
   }
 
   async getAllUsers() {

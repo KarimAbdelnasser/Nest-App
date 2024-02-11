@@ -7,6 +7,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { JwtMiddleware } from 'src/middleware/jwt.middleware';
 import { AdminMiddleware } from 'src/middleware/admin.middleware';
 import { config } from 'src/config/config';
+import { logger } from 'src/utility/logger';
+import { MorganMiddleware } from 'src/middleware/morgan.middleware';
 
 @Module({
   imports: [
@@ -17,7 +19,8 @@ import { config } from 'src/config/config';
     UserModule,
     TaskModule,
   ],
-  providers: [AppService],
+  providers: [AppService, { provide: 'Logger', useValue: logger }],
+  exports: ['Logger'],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
@@ -36,5 +39,6 @@ export class AppModule {
         { path: '/task/getAll', method: RequestMethod.GET },
         { path: '/task/remove/:id', method: RequestMethod.DELETE },
       );
+    consumer.apply(MorganMiddleware).forRoutes('*');
   }
 }

@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Task } from './task.schema';
 import { Model } from 'mongoose';
 import { CreateTaskDto } from './dtos/create-task-dto';
 import { UpdateTaskDto } from './dtos/update-task-dto';
+import { logger } from 'src/utility/logger';
 
 @Injectable()
 export class TasksService {
@@ -12,11 +17,20 @@ export class TasksService {
   ) {}
 
   async create(createTaskDto: CreateTaskDto, userId: string): Promise<Task> {
-    const createdTask = new this.taskModel({
-      ...createTaskDto,
-      userId: userId,
-    });
-    return await createdTask.save();
+    try {
+      const createdTask = new this.taskModel({
+        ...createTaskDto,
+        userId: userId,
+      });
+
+      return await createdTask.save();
+    } catch (error) {
+      logger.error(`Error creating a new task: ${(error as Error).message}`);
+
+      throw new InternalServerErrorException(
+        `Could not create task : ${error.message}`,
+      );
+    }
   }
 
   async getAllTasks(userId: string): Promise<Task[]> {
@@ -73,12 +87,20 @@ export class TasksService {
   }
 
   async getAll() {
-    const tasks = await this.taskModel
-      .find()
-      .select('-_id userId title description status')
-      .exec();
+    try {
+      const tasks = await this.taskModel
+        .find()
+        .select('-_id userId title description status')
+        .exec();
 
-    return tasks;
+      return tasks;
+    } catch (error) {
+      logger.error(`Error getting all tasks: ${(error as Error).message}`);
+
+      throw new InternalServerErrorException(
+        `Could not get all tasks : ${error.message}`,
+      );
+    }
   }
 
   async removeTask(id: string) {
